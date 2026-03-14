@@ -8,6 +8,12 @@
   "orientation": "portrait",
   "background_color": "#09090b",
   "theme_color": "#09090b",
+  "protocol_handlers": [
+    {
+      "protocol": "openid-credential-offer",
+      "url": "/offer?uri=%s"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",
