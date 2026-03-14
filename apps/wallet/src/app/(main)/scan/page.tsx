@@ -49,7 +49,7 @@ export default function ScanPage() {
               container: { width: "100%", height: "100%" },
               video: { objectFit: "cover" },
             }}
-            components={{ audio: false }}
+            components={{ audio: false, finder: false }}
           />
         )}
       </div>
