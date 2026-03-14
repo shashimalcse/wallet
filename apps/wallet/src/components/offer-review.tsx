@@ -12,6 +12,7 @@ interface OfferReviewProps {
   onAccept: (pin?: string) => void;
   onDecline: () => void;
   loading?: boolean;
+  isAuthCodeFlow?: boolean;
 }
 
 export function OfferReview({
@@ -19,10 +20,12 @@ export function OfferReview({
   onAccept,
   onDecline,
   loading,
+  isAuthCodeFlow,
 }: OfferReviewProps) {
   const [pin, setPin] = useState("");
   const { issuerMetadata, credentialConfigurations, requiresPin } =
     processedOffer;
+  const showPin = requiresPin && !isAuthCodeFlow;
 
   const issuerName =
     issuerMetadata.display?.[0]?.name || issuerMetadata.credential_issuer;
@@ -102,7 +105,7 @@ export function OfferReview({
         </div>
 
         {/* PIN input */}
-        {requiresPin && (
+        {showPin && (
           <div className="mb-6">
             <p className="text-sm font-medium mb-1">
               {processedOffer.pinDescription || "Enter PIN"}
@@ -133,10 +136,16 @@ export function OfferReview({
         <Button
           size="lg"
           className="flex-1"
-          onClick={() => onAccept(requiresPin ? pin : undefined)}
-          disabled={loading || (requiresPin && !pin)}
+          onClick={() => onAccept(showPin ? pin : undefined)}
+          disabled={loading || (showPin && !pin)}
         >
-          {loading ? "Accepting..." : "Accept"}
+          {loading
+            ? isAuthCodeFlow
+              ? "Redirecting..."
+              : "Accepting..."
+            : isAuthCodeFlow
+              ? "Continue"
+              : "Accept"}
         </Button>
       </div>
     </motion.div>

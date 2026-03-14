@@ -158,7 +158,8 @@ export class OID4VCIClient {
         redirect_uri: this.redirectUri,
         code_verifier: pkce.codeVerifier,
       },
-      this.httpClient
+      this.httpClient,
+      this.clientId || undefined
     );
 
     return this.requestCredentials(

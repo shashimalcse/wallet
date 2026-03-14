@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import { toast } from "sonner";
 import { OfferReview } from "@/components/offer-review";
-import { useOid4vciFlow } from "@/hooks/use-oid4vci-flow";
+import { useOid4vciFlow, getGrantType } from "@/hooks/use-oid4vci-flow";
 import { useCredentials } from "@/hooks/use-credentials";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -13,15 +13,49 @@ function OfferContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const uri = searchParams.get("uri");
-  const { state, processedOffer, error, startFlow, acceptOffer, reset } =
-    useOid4vciFlow();
+  const code = searchParams.get("code");
+  const returnedState = searchParams.get("state");
+  const callbackError = searchParams.get("error");
+  const {
+    state,
+    processedOffer,
+    error,
+    startFlow,
+    acceptOffer,
+    completeAuthCodeFlow,
+    reset,
+  } = useOid4vciFlow();
   const { addCredential } = useCredentials();
 
+  // Handle auth code callback return
   useEffect(() => {
-    if (uri && state === "idle") {
+    if (code && returnedState && state === "idle") {
+      completeAuthCodeFlow(code, returnedState).then(async (creds) => {
+        for (const cred of creds) {
+          await addCredential(cred);
+        }
+        if (creds.length > 0) {
+          toast.success("Credential received!");
+          router.push("/home");
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, returnedState]);
+
+  // Handle callback error from issuer
+  useEffect(() => {
+    if (callbackError) {
+      toast.error(callbackError);
+    }
+  }, [callbackError]);
+
+  // Handle new offer URI
+  useEffect(() => {
+    if (uri && state === "idle" && !code) {
       startFlow(uri);
     }
-  }, [uri, state, startFlow]);
+  }, [uri, state, startFlow, code]);
 
   useEffect(() => {
     if (error) {
@@ -45,7 +79,16 @@ function OfferContent() {
     router.push("/home");
   };
 
-  if (state === "loading-metadata") {
+  let isAuthCodeFlow = false;
+  if (processedOffer) {
+    try {
+      isAuthCodeFlow = getGrantType(processedOffer) === "authorization_code";
+    } catch {
+      // No supported grant type — will error on accept
+    }
+  }
+
+  if (state === "loading-metadata" || state === "completing") {
     return (
       <div className="flex h-dvh items-center justify-center">
         <motion.div
@@ -54,7 +97,11 @@ function OfferContent() {
           className="flex flex-col items-center gap-4"
         >
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading offer...</p>
+          <p className="text-sm text-muted-foreground">
+            {state === "completing"
+              ? "Completing authorization..."
+              : "Loading offer..."}
+          </p>
         </motion.div>
       </div>
     );
@@ -76,13 +123,19 @@ function OfferContent() {
     );
   }
 
-  if (processedOffer && (state === "awaiting-review" || state === "requesting")) {
+  if (
+    processedOffer &&
+    (state === "awaiting-review" ||
+      state === "requesting" ||
+      state === "redirecting")
+  ) {
     return (
       <OfferReview
         processedOffer={processedOffer}
         onAccept={handleAccept}
         onDecline={handleDecline}
-        loading={state === "requesting"}
+        loading={state === "requesting" || state === "redirecting"}
+        isAuthCodeFlow={isAuthCodeFlow}
       />
     );
   }

@@ -6,7 +6,8 @@ import { TokenError } from "./utils/errors.js";
 export async function requestToken(
   tokenEndpoint: string,
   tokenRequest: TokenRequest,
-  httpClient: HttpClient = defaultHttpClient
+  httpClient: HttpClient = defaultHttpClient,
+  clientId?: string
 ): Promise<TokenResponse> {
   const body = new URLSearchParams();
 
@@ -22,6 +23,9 @@ export async function requestToken(
     body.set("redirect_uri", tokenRequest.redirect_uri);
     if (tokenRequest.code_verifier) {
       body.set("code_verifier", tokenRequest.code_verifier);
+    }
+    if (clientId) {
+      body.set("client_id", clientId);
     }
   }
 

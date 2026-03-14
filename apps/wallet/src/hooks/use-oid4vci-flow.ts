@@ -1,25 +1,69 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   OID4VCIClient,
   type ProcessedOffer,
   type CredentialResponse,
   type CredentialDisplay,
+  type PKCEParams,
 } from "@wallet/oid4vci";
 import { createCryptoProvider, generateKeyPair } from "@/lib/key-manager";
 import { type StoredCredential } from "@/lib/credential-store";
+
+const SESSION_KEY = "oid4vci_auth_flow";
+
+export type GrantType = "pre-authorized_code" | "authorization_code";
 
 export type FlowState =
   | "idle"
   | "loading-metadata"
   | "awaiting-review"
   | "requesting"
+  | "redirecting"
+  | "completing"
   | "success"
   | "error";
 
 export interface FlowResult {
   credentials: StoredCredential[];
+}
+
+interface PersistedAuthFlowData {
+  pkce: PKCEParams;
+  state: string;
+  offerUri: string;
+  keyId: string;
+}
+
+function getGrantType(offer: ProcessedOffer): GrantType {
+  if (
+    offer.offer.grants?.[
+      "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+    ]
+  ) {
+    return "pre-authorized_code";
+  }
+  if (offer.offer.grants?.authorization_code) {
+    return "authorization_code";
+  }
+  throw new Error("Credential offer does not specify a supported grant type");
+}
+
+export { getGrantType };
+
+function persistAuthFlowData(data: PersistedAuthFlowData) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+
+function loadAuthFlowData(): PersistedAuthFlowData | null {
+  const raw = sessionStorage.getItem(SESSION_KEY);
+  if (!raw) return null;
+  return JSON.parse(raw) as PersistedAuthFlowData;
+}
+
+function clearAuthFlowData() {
+  sessionStorage.removeItem(SESSION_KEY);
 }
 
 export function useOid4vciFlow() {
@@ -30,17 +74,23 @@ export function useOid4vciFlow() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<FlowResult | null>(null);
 
-  const client = new OID4VCIClient({
-    cryptoProvider: createCryptoProvider(),
-    clientId: "wallet",
-    redirectUri: `${window.location.origin}/api/wallet/oid4vci/callback`,
-  });
+  const clientRef = useRef<OID4VCIClient | null>(null);
+  if (!clientRef.current) {
+    clientRef.current = new OID4VCIClient({
+      cryptoProvider: createCryptoProvider(),
+      clientId: "wallet",
+      redirectUri: `${window.location.origin}/api/wallet/oid4vci/callback`,
+    });
+  }
+  const client = clientRef.current;
+  const offerUriRef = useRef<string | null>(null);
 
   const startFlow = useCallback(
     async (offerUri: string) => {
       setState("loading-metadata");
       setError(null);
       setResult(null);
+      offerUriRef.current = offerUri;
 
       try {
         const offer = await client.processOffer(offerUri);
@@ -61,6 +111,43 @@ export function useOid4vciFlow() {
         throw new Error("No offer to accept");
       }
 
+      const grantType = getGrantType(processedOffer);
+
+      if (grantType === "authorization_code") {
+        setState("redirecting");
+        setError(null);
+
+        try {
+          const keyId = await generateKeyPair();
+          const { url, pkce, state: authState } =
+            await client.buildAuthorizationRequest(processedOffer);
+
+          // Persist the original offerUri so we can re-process the offer after redirect
+          const offerUri =
+            offerUriRef.current ||
+            `openid-credential-offer://?credential_offer=${encodeURIComponent(
+              JSON.stringify(processedOffer.offer)
+            )}`;
+
+          persistAuthFlowData({
+            pkce,
+            state: authState,
+            offerUri,
+            keyId,
+          });
+
+          window.location.href = url;
+          return []; // Will redirect away
+        } catch (e) {
+          setError(
+            e instanceof Error ? e.message : "Failed to start authorization"
+          );
+          setState("error");
+          return [];
+        }
+      }
+
+      // Pre-authorized code flow
       setState("requesting");
       setError(null);
 
@@ -72,23 +159,10 @@ export function useOid4vciFlow() {
           pin
         );
 
-        const storedCredentials = responses
-          .map((response, index) => {
-            if (!response.credential) return null;
-            const configId =
-              processedOffer.offer.credential_configuration_ids[index];
-            const config =
-              processedOffer.credentialConfigurations[configId];
-
-            return responseToStoredCredential(
-              response,
-              configId,
-              processedOffer.offer.credential_issuer,
-              config?.display?.[0],
-              processedOffer.issuerMetadata.display?.[0]
-            );
-          })
-          .filter(Boolean) as StoredCredential[];
+        const storedCredentials = responsesToStoredCredentials(
+          responses,
+          processedOffer
+        );
 
         setResult({ credentials: storedCredentials });
         setState("success");
@@ -105,6 +179,55 @@ export function useOid4vciFlow() {
     [processedOffer]
   );
 
+  const completeAuthCodeFlow = useCallback(
+    async (code: string, returnedState: string): Promise<StoredCredential[]> => {
+      setState("completing");
+      setError(null);
+
+      try {
+        const persisted = loadAuthFlowData();
+        if (!persisted) {
+          throw new Error("No in-progress authorization flow found");
+        }
+
+        if (persisted.state !== returnedState) {
+          throw new Error("State mismatch — possible CSRF attack");
+        }
+
+        // Re-process the offer to get metadata
+        const offer = await client.processOffer(persisted.offerUri);
+        setProcessedOffer(offer);
+
+        const responses = await client.completeAuthorizationFlow(
+          offer,
+          code,
+          persisted.pkce,
+          persisted.keyId
+        );
+
+        clearAuthFlowData();
+
+        const storedCredentials = responsesToStoredCredentials(
+          responses,
+          offer
+        );
+
+        setResult({ credentials: storedCredentials });
+        setState("success");
+        return storedCredentials;
+      } catch (e) {
+        clearAuthFlowData();
+        setError(
+          e instanceof Error ? e.message : "Failed to complete authorization"
+        );
+        setState("error");
+        return [];
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   const reset = useCallback(() => {
     setState("idle");
     setProcessedOffer(null);
@@ -119,8 +242,31 @@ export function useOid4vciFlow() {
     result,
     startFlow,
     acceptOffer,
+    completeAuthCodeFlow,
     reset,
   };
+}
+
+function responsesToStoredCredentials(
+  responses: CredentialResponse[],
+  processedOffer: ProcessedOffer
+): StoredCredential[] {
+  return responses
+    .map((response, index) => {
+      if (!response.credential) return null;
+      const configId =
+        processedOffer.offer.credential_configuration_ids[index];
+      const config = processedOffer.credentialConfigurations[configId];
+
+      return responseToStoredCredential(
+        response,
+        configId,
+        processedOffer.offer.credential_issuer,
+        config?.display?.[0],
+        processedOffer.issuerMetadata.display?.[0]
+      );
+    })
+    .filter(Boolean) as StoredCredential[];
 }
 
 function responseToStoredCredential(
