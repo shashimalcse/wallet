@@ -35,10 +35,16 @@ export {
 } from "./metadata.js";
 export {
   buildAuthorizationUrl,
+  pushAuthorizationRequest,
   parseAuthorizationResponse,
   generatePKCE,
 } from "./authorization.js";
-export type { PKCEParams, AuthorizationUrlParams } from "./authorization.js";
+export type {
+  PKCEParams,
+  AuthorizationUrlParams,
+  PARParams,
+  PARResponse,
+} from "./authorization.js";
 export { requestToken } from "./token.js";
 export { createJwtProof } from "./proof.js";
 export type { ProofParams } from "./proof.js";

@@ -12,6 +12,7 @@ import { resolveCredentialOffer } from "./offer.js";
 import { fetchIssuerMetadata, fetchAuthServerMetadata } from "./metadata.js";
 import {
   buildAuthorizationUrl,
+  pushAuthorizationRequest,
   generatePKCE,
   type PKCEParams,
 } from "./authorization.js";
@@ -131,13 +132,56 @@ export class OID4VCIClient {
     const pkce = await generatePKCE();
     const state = crypto.randomUUID();
 
+    // Collect scopes from credential configurations if not explicitly provided
+    const resolvedScope =
+      scope ||
+      [
+        ...new Set(
+          processedOffer.offer.credential_configuration_ids
+            .map((id) => processedOffer.credentialConfigurations[id]?.scope)
+            .filter(Boolean)
+        ),
+      ].join(" ");
+
+    const parEndpoint =
+      processedOffer.authServerMetadata.pushed_authorization_request_endpoint;
+
+    if (parEndpoint) {
+      const issuerState =
+        processedOffer.offer.grants?.authorization_code?.issuer_state;
+
+      const parResponse = await pushAuthorizationRequest({
+        parEndpoint,
+        clientId: this.clientId,
+        redirectUri: this.redirectUri,
+        scope: resolvedScope || "openid",
+        pkce,
+        state,
+        issuerState,
+        httpClient: this.httpClient,
+      });
+
+      const url = buildAuthorizationUrl({
+        authServerMetadata: processedOffer.authServerMetadata,
+        clientId: this.clientId,
+        redirectUri: this.redirectUri,
+        credentialOffer: processedOffer.offer,
+        pkce,
+        state,
+        requestUri: parResponse.request_uri,
+      });
+
+      return { url, pkce, state };
+    }
+
+    // Non-PAR fallback with scope
     const url = buildAuthorizationUrl({
       authServerMetadata: processedOffer.authServerMetadata,
       clientId: this.clientId,
       redirectUri: this.redirectUri,
       credentialOffer: processedOffer.offer,
       pkce,
-      scope,
+      scope: resolvedScope,
       state,
     });
 
