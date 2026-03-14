@@ -54,7 +54,7 @@ export function OfferReview({
 
       <div className="flex-1 overflow-y-auto px-5 pb-4">
         {/* Issuer info */}
-        <div className="flex items-center gap-3 rounded-3xl glass shadow-card p-4 mb-6">
+        <div className="flex items-center gap-3 rounded-3xl glass-panel p-4 mb-6 border border-white/5">
           {issuerLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -85,7 +85,7 @@ export function OfferReview({
                 key={id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl glass shadow-card p-4"
+                className="rounded-2xl glass-panel p-4 border border-white/5"
                 style={
                   display?.background_color
                     ? {
@@ -140,7 +140,7 @@ export function OfferReview({
           Decline
         </Button>
         <Button
-          variant="gradient"
+          variant="default"
           size="lg"
           className="flex-1"
           onClick={() => onAccept(showPin ? pin : undefined)}

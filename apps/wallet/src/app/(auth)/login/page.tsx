@@ -8,24 +8,6 @@ import { Button } from "@/components/ui/button";
 export default function LoginPage() {
   return (
     <div className="relative flex h-dvh flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Aurora background orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <motion.div
-          animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl"
-        />
-        <motion.div
-          animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-accent/20 blur-3xl"
-        />
-        <motion.div
-          animate={{ x: [0, 15, 0], y: [0, 15, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/3 right-1/4 h-48 w-48 rounded-full bg-primary/10 blur-3xl"
-        />
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -45,10 +27,8 @@ export default function LoginPage() {
           className="mb-8"
         >
           <div className="relative">
-            {/* Glow ring */}
-            <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl scale-110" />
-            {/* Glass card behind icon */}
-            <div className="relative rounded-3xl glass shadow-elevated p-7">
+            {/* Flat Glass card behind icon */}
+            <div className="relative rounded-3xl glass-panel p-7 border border-white/5">
               <Shield className="h-14 w-14 text-primary" />
             </div>
           </div>
@@ -78,9 +58,9 @@ export default function LoginPage() {
           className="w-full"
         >
           <Button
-            variant="gradient"
+            variant="default"
             size="lg"
-            className="w-full max-w-[300px] h-12 text-base shadow-elevated"
+            className="w-full max-w-[300px] h-12 text-base"
             onClick={() => signIn("asgardeo", { callbackUrl: "/home" })}
           >
             Sign in with Asgardeo
