@@ -108,12 +108,15 @@ export class OID4VCIClient {
       throw new Error("Offer does not contain pre-authorized_code grant");
     }
 
+    const resolvedScope = this.resolveScope(processedOffer);
+
     const tokenResponse = await requestToken(
       processedOffer.authServerMetadata.token_endpoint,
       {
         grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
         "pre-authorized_code": preAuthGrant["pre-authorized_code"],
         tx_code: pin,
+        ...(resolvedScope && { scope: resolvedScope }),
       },
       this.httpClient
     );
@@ -133,15 +136,7 @@ export class OID4VCIClient {
     const state = crypto.randomUUID();
 
     // Collect scopes from credential configurations if not explicitly provided
-    const resolvedScope =
-      scope ||
-      [
-        ...new Set(
-          processedOffer.offer.credential_configuration_ids
-            .map((id) => processedOffer.credentialConfigurations[id]?.scope)
-            .filter(Boolean)
-        ),
-      ].join(" ");
+    const resolvedScope = this.resolveScope(processedOffer, scope);
 
     const parEndpoint =
       processedOffer.authServerMetadata.pushed_authorization_request_endpoint;
@@ -194,6 +189,8 @@ export class OID4VCIClient {
     pkce: PKCEParams,
     keyId: string
   ): Promise<CredentialResponse[]> {
+    const resolvedScope = this.resolveScope(processedOffer);
+
     const tokenResponse = await requestToken(
       processedOffer.authServerMetadata.token_endpoint,
       {
@@ -201,6 +198,7 @@ export class OID4VCIClient {
         code,
         redirect_uri: this.redirectUri,
         code_verifier: pkce.codeVerifier,
+        ...(resolvedScope && { scope: resolvedScope }),
       },
       this.httpClient,
       this.clientId || undefined
@@ -229,6 +227,15 @@ export class OID4VCIClient {
       transactionId,
       this.httpClient
     );
+  }
+
+  private resolveScope(processedOffer: ProcessedOffer, scope?: string): string | undefined {
+    return scope ||
+      [...new Set(
+        processedOffer.offer.credential_configuration_ids
+          .map((id) => processedOffer.credentialConfigurations[id]?.scope)
+          .filter(Boolean)
+      )].join(" ") || undefined;
   }
 
   private async requestCredentials(

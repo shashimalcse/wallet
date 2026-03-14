@@ -2,6 +2,7 @@ export interface PreAuthorizedTokenRequest {
   grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code";
   "pre-authorized_code": string;
   tx_code?: string;
+  scope?: string;
 }
 
 export interface AuthorizationCodeTokenRequest {
@@ -9,6 +10,7 @@ export interface AuthorizationCodeTokenRequest {
   code: string;
   redirect_uri: string;
   code_verifier?: string;
+  scope?: string;
 }
 
 export type TokenRequest =

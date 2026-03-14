@@ -29,6 +29,10 @@ export async function requestToken(
     }
   }
 
+  if (tokenRequest.scope) {
+    body.set("scope", tokenRequest.scope);
+  }
+
   const response = await httpClient.fetch(tokenEndpoint, {
     method: "POST",
     headers: {
