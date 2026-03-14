@@ -140,7 +140,7 @@ export function OfferReview({
           Decline
         </Button>
         <Button
-          variant="default"
+          variant="glass"
           size="lg"
           className="flex-1"
           onClick={() => onAccept(showPin ? pin : undefined)}
