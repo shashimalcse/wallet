@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@serwist/next": "^9.5.6",
     "@wallet/oid4vci": "workspace:*",
     "@yudiel/react-qr-scanner": "^2.0.8",
     "class-variance-authority": "^0.7.1",
@@ -20,6 +21,7 @@
     "next-auth": "5.0.0-beta.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "serwist": "^9.5.6",
     "sonner": "^1.7.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7"

@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   title: "Wallet",
   description: "Digital Identity Wallet",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Wallet",
+  },
+  icons: {
+    apple: "/icons/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {

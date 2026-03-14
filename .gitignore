@@ -7,3 +7,5 @@ dist/
 .env.local
 .env.*.local
 *.tsbuildinfo
+# Serwist generated service worker
+apps/wallet/public/sw.js

@@ -3,8 +3,10 @@
   "short_name": "Wallet",
   "description": "Digital Identity Wallet",
   "start_url": "/home",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "background_color": "#09090b",
   "theme_color": "#09090b",
   "icons": [
     {
@@ -16,6 +18,12 @@
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
