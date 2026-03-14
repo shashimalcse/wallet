@@ -56,7 +56,7 @@ export function CredentialCard({ credential, onClick }: CredentialCardProps) {
   return (
     <motion.div
       whileTap={onClick ? { scale: 0.98 } : undefined}
-      className={`relative overflow-hidden rounded-2xl shadow-card ${onClick ? "cursor-pointer hover:shadow-glow hover:-translate-y-1 transition-all duration-300" : ""} glass-panel min-h-[190px] p-6 text-white flex flex-col justify-between border border-white/5`}
+      className={`relative overflow-hidden rounded-2xl ${onClick ? "cursor-pointer hover:-translate-y-1 transition-all duration-300" : ""} glass-panel min-h-[190px] p-6 text-white flex flex-col justify-between border border-white/5`}
       style={
         credential.display?.backgroundColor
           ? { backgroundColor: credential.display.backgroundColor }
@@ -64,13 +64,6 @@ export function CredentialCard({ credential, onClick }: CredentialCardProps) {
       }
       onClick={onClick}
     >
-      {/* Colored glow effects */}
-      {!credential.display?.backgroundColor && (
-        <>
-          <div className={`absolute -top-20 -right-20 h-48 w-48 rounded-full blur-[60px] ${glowColor} pointer-events-none mix-blend-screen opacity-70`} />
-          <div className={`absolute -bottom-20 -left-20 h-40 w-40 rounded-full blur-[50px] ${glowColor} pointer-events-none mix-blend-screen opacity-40`} />
-        </>
-      )}
       {/* Top row: category icon + contactless icon */}
       <div className="flex items-start justify-between">
         <div className="rounded-full bg-white/20 p-2.5 backdrop-blur-md shadow-sm border border-white/10">

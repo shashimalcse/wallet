@@ -55,7 +55,7 @@ export default function CredentialDetailPage() {
         >
           <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
         </button>
-        <h1 className="ml-4 text-2xl font-extrabold tracking-tight text-gradient">Credential</h1>
+        <h1 className="ml-4 text-2xl font-extrabold tracking-tight text-foreground">Credential</h1>
       </div>
 
       {/* Card preview */}
@@ -72,7 +72,7 @@ export default function CredentialDetailPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mx-6 mt-8 rounded-3xl glass-panel shadow-card p-6"
+        className="mx-6 mt-8 rounded-3xl glass-panel p-6 border border-white/5"
       >
         <h2 className="text-lg font-bold tracking-tight mb-5">Details</h2>
 
@@ -82,7 +82,7 @@ export default function CredentialDetailPage() {
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
                 {key.replace(/_/g, " ")}
               </p>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-sm font-medium text-foreground break-all">
                 {String(value)}
               </p>
             </div>
