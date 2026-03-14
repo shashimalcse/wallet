@@ -1,23 +1,44 @@
 "use client";
 
 import { motion } from "framer-motion";
+import {
+  Car,
+  GraduationCap,
+  Heart,
+  Briefcase,
+  Shield,
+  Wifi,
+} from "lucide-react";
 import type { StoredCredential } from "@/lib/credential-store";
 
-const gradients: Record<string, string> = {
-  default: "from-slate-800 to-slate-600",
-  university: "from-blue-700 to-indigo-500",
-  identity: "from-emerald-700 to-teal-500",
-  employment: "from-purple-700 to-violet-500",
-  license: "from-amber-700 to-orange-500",
-  health: "from-rose-700 to-pink-500",
+const glowColors: Record<string, string> = {
+  default: "bg-slate-500/30",
+  university: "bg-blue-500/30",
+  identity: "bg-emerald-500/30",
+  employment: "bg-purple-500/30",
+  license: "bg-amber-500/30",
+  health: "bg-rose-500/30",
 };
 
-function getGradient(configId: string): string {
+function getGlowColor(configId: string): string {
   const lower = configId.toLowerCase();
-  for (const [key, gradient] of Object.entries(gradients)) {
-    if (lower.includes(key)) return gradient;
+  for (const [key, glow] of Object.entries(glowColors)) {
+    if (lower.includes(key)) return glow;
   }
-  return gradients.default;
+  return glowColors.default;
+}
+
+function getCategoryIcon(configId: string) {
+  const lower = configId.toLowerCase();
+  if (lower.includes("license") || lower.includes("driving"))
+    return Car;
+  if (lower.includes("university") || lower.includes("degree") || lower.includes("diploma"))
+    return GraduationCap;
+  if (lower.includes("health") || lower.includes("medical"))
+    return Heart;
+  if (lower.includes("employment") || lower.includes("work"))
+    return Briefcase;
+  return Shield;
 }
 
 interface CredentialCardProps {
@@ -26,14 +47,16 @@ interface CredentialCardProps {
 }
 
 export function CredentialCard({ credential, onClick }: CredentialCardProps) {
-  const gradient = credential.display?.backgroundColor
+  const glowColor = credential.display?.backgroundColor
     ? ""
-    : getGradient(credential.credentialConfigurationId);
+    : getGlowColor(credential.credentialConfigurationId);
+
+  const CategoryIcon = getCategoryIcon(credential.credentialConfigurationId);
 
   return (
     <motion.div
-      whileTap={{ scale: 0.98 }}
-      className={`relative overflow-hidden rounded-2xl shadow-lg cursor-pointer bg-gradient-to-br ${gradient} min-h-[180px] p-5 text-white`}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
+      className={`relative overflow-hidden rounded-2xl shadow-card ${onClick ? "cursor-pointer hover:shadow-glow hover:-translate-y-1 transition-all duration-300" : ""} glass-panel min-h-[190px] p-6 text-white flex flex-col justify-between border border-white/5`}
       style={
         credential.display?.backgroundColor
           ? { backgroundColor: credential.display.backgroundColor }
@@ -41,44 +64,34 @@ export function CredentialCard({ credential, onClick }: CredentialCardProps) {
       }
       onClick={onClick}
     >
+      {/* Colored glow effects */}
+      {!credential.display?.backgroundColor && (
+        <>
+          <div className={`absolute -top-20 -right-20 h-48 w-48 rounded-full blur-[60px] ${glowColor} pointer-events-none mix-blend-screen opacity-70`} />
+          <div className={`absolute -bottom-20 -left-20 h-40 w-40 rounded-full blur-[50px] ${glowColor} pointer-events-none mix-blend-screen opacity-40`} />
+        </>
+      )}
+      {/* Top row: category icon + contactless icon */}
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-xs font-medium opacity-80 uppercase tracking-wider">
-            {credential.issuerDisplay?.name || credential.issuer}
-          </p>
-          <h3 className="mt-1 text-lg font-bold">
-            {credential.display?.name || credential.credentialConfigurationId}
-          </h3>
-          {credential.display?.description && (
-            <p className="mt-1 text-sm opacity-80">
-              {credential.display.description}
-            </p>
-          )}
+        <div className="rounded-full bg-white/20 p-2.5 backdrop-blur-md shadow-sm border border-white/10">
+          <CategoryIcon className="h-5 w-5 text-white drop-shadow-md" />
         </div>
-        {credential.issuerDisplay?.logo && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={credential.issuerDisplay.logo}
-            alt=""
-            className="h-10 w-10 rounded-full bg-white/20 p-1"
-          />
-        )}
+        <div className="text-white/40">
+          <Wifi className="h-5 w-5 rotate-90" />
+        </div>
       </div>
 
-      <div className="mt-6 space-y-1">
-        {Object.entries(credential.claims)
-          .slice(0, 3)
-          .map(([key, value]) => (
-            <div key={key} className="flex justify-between text-sm">
-              <span className="opacity-70 capitalize">
-                {key.replace(/_/g, " ")}
-              </span>
-              <span className="font-medium">{String(value)}</span>
-            </div>
-          ))}
+      {/* Bottom: issuer + credential name */}
+      <div>
+        <p className="text-xs font-medium text-white/80 uppercase tracking-wider">
+          {credential.issuerDisplay?.name || credential.issuer}
+        </p>
+        <h3 className="mt-0.5 text-lg font-bold text-white">
+          {credential.display?.name || credential.credentialConfigurationId}
+        </h3>
       </div>
 
-      {/* Decorative circle */}
+      {/* Decorative circles */}
       <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
       <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/5" />
     </motion.div>

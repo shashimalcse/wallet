@@ -35,11 +35,14 @@ export function OfferReview({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: "100%", rotateX: -5 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ type: "spring", damping: 28, stiffness: 280 }}
       className="flex flex-col h-full"
     >
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-5">
+        {/* Drag handle */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 h-1 w-10 rounded-full bg-muted-foreground/20" />
         <h1 className="text-lg font-semibold">Credential Offer</h1>
         <button
           onClick={onDecline}
@@ -49,9 +52,9 @@ export function OfferReview({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-5 pb-4">
         {/* Issuer info */}
-        <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4 mb-6">
+        <div className="flex items-center gap-3 rounded-3xl glass shadow-card p-4 mb-6">
           {issuerLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -60,7 +63,7 @@ export function OfferReview({
               className="h-12 w-12 rounded-full"
             />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
               <Shield className="h-6 w-6 text-primary" />
             </div>
           )}
@@ -78,13 +81,16 @@ export function OfferReview({
           {credentials.map(([id, config]) => {
             const display = config.display?.[0];
             return (
-              <div
+              <motion.div
                 key={id}
-                className="rounded-xl border p-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl glass shadow-card p-4"
                 style={
                   display?.background_color
                     ? {
                         borderColor: display.background_color,
+                        borderWidth: 1,
                         backgroundColor: `${display.background_color}10`,
                       }
                     : undefined
@@ -99,7 +105,7 @@ export function OfferReview({
                 <p className="text-xs text-muted-foreground mt-2">
                   Format: {config.format}
                 </p>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -123,7 +129,7 @@ export function OfferReview({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 p-4 border-t pb-safe">
+      <div className="flex gap-3 p-5 pb-safe">
         <Button
           variant="outline"
           size="lg"
@@ -134,6 +140,7 @@ export function OfferReview({
           Decline
         </Button>
         <Button
+          variant="gradient"
           size="lg"
           className="flex-1"
           onClick={() => onAccept(showPin ? pin : undefined)}

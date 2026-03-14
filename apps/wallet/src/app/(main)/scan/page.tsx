@@ -64,16 +64,34 @@ export default function ScanPage() {
           >
             {/* Scanner frame */}
             <div className="w-64 h-64 relative">
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-xl" />
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-xl" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-xl" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-xl" />
+              <div className="absolute top-0 left-0 w-10 h-10 border-t-[3px] border-l-[3px] border-primary rounded-tl-2xl" />
+              <div className="absolute top-0 right-0 w-10 h-10 border-t-[3px] border-r-[3px] border-primary rounded-tr-2xl" />
+              <div className="absolute bottom-0 left-0 w-10 h-10 border-b-[3px] border-l-[3px] border-primary rounded-bl-2xl" />
+              <div className="absolute bottom-0 right-0 w-10 h-10 border-b-[3px] border-r-[3px] border-primary rounded-br-2xl" />
+
+              {/* Animated scan line */}
+              <motion.div
+                className="absolute left-2 right-2 h-0.5"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)",
+                }}
+                animate={{ top: ["0%", "100%", "0%"] }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
             </div>
           </motion.div>
 
-          <p className="mt-8 text-white text-sm font-medium drop-shadow-lg">
-            Point your camera at a QR code
-          </p>
+          {/* Glass pill instruction */}
+          <div className="mt-8 glass rounded-2xl px-5 py-2.5 shadow-card">
+            <p className="text-foreground text-sm font-medium">
+              Point your camera at a QR code
+            </p>
+          </div>
         </div>
       </div>
     </div>

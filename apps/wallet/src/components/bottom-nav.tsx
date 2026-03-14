@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ScanLine, Settings } from "lucide-react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -15,8 +16,8 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/80 backdrop-blur-xl pb-safe">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 glass-panel rounded-full shadow-sm border-t border-white/5 px-2 py-2 w-max max-w-[90vw]">
+      <div className="flex items-center gap-2">
         {navItems.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;
           return (
@@ -24,14 +25,26 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[44px] rounded-xl px-3 py-1.5 transition-colors no-select",
+                "relative flex flex-col items-center justify-center gap-1 min-w-[72px] min-h-[56px] rounded-full px-4 py-2 transition-all duration-300 no-select",
                 isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/20"
               )}
             >
-              <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[10px] font-medium">{label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 rounded-full bg-primary/20"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <Icon
+                className="h-5 w-5 relative z-10"
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+              <span className="text-[10px] font-medium relative z-10 tracking-wide">
+                {label}
+              </span>
             </Link>
           );
         })}

@@ -6,8 +6,10 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-dvh flex-col">
-      <main className="flex-1 overflow-y-auto pb-20">{children}</main>
+    <div className="flex h-dvh flex-col bg-transparent">
+      <main className="flex-1 overflow-y-auto pb-24 perspective-container">
+        {children}
+      </main>
       <BottomNav />
     </div>
   );

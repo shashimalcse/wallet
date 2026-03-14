@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface PinInputProps {
@@ -47,26 +48,32 @@ export function PinInput({
   );
 
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-3 justify-center">
       {values.map((value, index) => (
-        <input
+        <motion.div
           key={index}
-          ref={(el) => {
-            inputRefs.current[index] = el;
-          }}
-          type={inputMode === "numeric" ? "tel" : "text"}
-          inputMode={inputMode}
-          maxLength={1}
-          value={value}
-          onChange={(e) => handleChange(index, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
-          className={cn(
-            "h-14 w-12 rounded-xl border-2 bg-background text-center text-2xl font-bold",
-            "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
-            "transition-all"
-          )}
-          autoComplete="one-time-code"
-        />
+          animate={value ? { scale: [1, 1.08, 1] } : {}}
+          transition={{ duration: 0.15 }}
+        >
+          <input
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
+            type={inputMode === "numeric" ? "tel" : "text"}
+            inputMode={inputMode}
+            maxLength={1}
+            value={value}
+            onChange={(e) => handleChange(index, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            className={cn(
+              "h-14 w-12 rounded-2xl bg-secondary/50 backdrop-blur-sm text-center text-2xl font-bold",
+              "border-2 border-transparent",
+              "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+              "transition-all"
+            )}
+            autoComplete="one-time-code"
+          />
+        </motion.div>
       ))}
     </div>
   );

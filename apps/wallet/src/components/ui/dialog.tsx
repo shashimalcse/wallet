@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DialogProps {
   open: boolean;
@@ -11,43 +12,56 @@ interface DialogProps {
 }
 
 function Dialog({ open, onOpenChange, children }: DialogProps) {
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50">
-      <div
-        className="fixed inset-0 bg-black/80 animate-in fade-in-0"
-        onClick={() => onOpenChange(false)}
-      />
-      {children}
-    </div>
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => onOpenChange(false)}
+          />
+          {children}
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 
-const DialogContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { onClose?: () => void }
->(({ className, children, onClose, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-background p-6 shadow-lg animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-[48%]",
-      className
-    )}
-    {...props}
-  >
-    {children}
-    {onClose && (
-      <button
-        className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100"
-        onClick={onClose}
-      >
-        <X className="h-4 w-4" />
-      </button>
-    )}
-  </div>
-));
-DialogContent.displayName = "DialogContent";
+interface DialogContentProps {
+  className?: string;
+  children: React.ReactNode;
+  onClose?: () => void;
+}
+
+function DialogContent({ className, children, onClose }: DialogContentProps) {
+  return (
+    <motion.div
+      initial={{ y: "100%", opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: "100%", opacity: 0 }}
+      transition={{ type: "spring", damping: 30, stiffness: 300 }}
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 w-full rounded-t-3xl bg-background p-6 pt-4 shadow-elevated",
+        className
+      )}
+    >
+      {/* Drag handle */}
+      <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted-foreground/20" />
+      {children}
+      {onClose && (
+        <button
+          className="absolute right-4 top-4 rounded-full p-2 opacity-70 transition-opacity hover:opacity-100"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </motion.div>
+  );
+}
 
 const DialogHeader = ({
   className,
